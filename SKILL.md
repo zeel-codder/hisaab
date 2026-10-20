@@ -59,7 +59,7 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
    bash <skill-dir>/scripts/scan.sh > "${TMPDIR:-/tmp}/hisaab-scan.md"
    ```
 
-   Options: `--fast` skips the two whole-home searches (files over 1 GB, `node_modules`/`.venv`);
+   Options: `--fast` skips the two whole-home searches (files over 1 GB, `node_modules`/`.venv`/Rust `target`);
    `--no-mole` skips Mole. The script detects Mole, Homebrew and Docker on its own; without Mole it still
    covers everything except Mole's app-cache and leftover-file checks.
 
@@ -80,8 +80,8 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
 
 6. **Write the report** using `assets/report-template.md`, as `hisaab-YYYY-MM-DD.md` in the
    folder the person chose in step 1 (default `<skill-dir>/reports/`; create that folder if needed).
-   Write nothing anywhere else. One report per run; if that file already exists, add the time
-   (`-HHMM`) instead of overwriting it.
+   Write nothing anywhere else (the scan from step 2 in `$TMPDIR` is the one other file). One report
+   per run; if that file already exists, add the time (`-HHMM`) instead of overwriting it.
    Then check the commands: `python3 <skill-dir>/scripts/check_commands.py <report>`. It only parses
    each block with zsh and bash (runs nothing) and flags `#` comments. Fix what it reports and rerun it
    until it says `0 problem(s)`. If `xcode-select -p` fails, `/usr/bin/python3` is only a stub that opens

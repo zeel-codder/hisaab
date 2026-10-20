@@ -13,8 +13,8 @@
 
 | Group | Potential space |
 | --- | ---: |
-| Safe (rebuilds itself) | about 31 GB |
-| Check first (may hold your work) | up to 22 GB |
+| Safe (rebuilds itself) | about 28 GB |
+| Check first (may hold your work) | up to 25 GB |
 
 Biggest items:
 
@@ -22,8 +22,8 @@ Biggest items:
 | ---: | --- | ---: | --- |
 | 1 | Xcode DerivedData | 18 GB | Safe |
 | 2 | iOS simulator runtimes you no longer target | 11 GB | Check first |
-| 3 | Docker build cache and unused images | 7.5 GB | Safe |
-| 4 | Old installers in Downloads | 5.2 GB | Check first |
+| 3 | Old installers in Downloads | 5.2 GB | Check first |
+| 4 | Docker build cache | 4.1 GB | Safe |
 | 5 | Homebrew old versions and downloads | 2.9 GB | Safe |
 
 ## Where the space goes
@@ -58,10 +58,10 @@ Clean:
 rm -rf ~/Library/Developer/Xcode/DerivedData
 ```
 
-### 1.2 Docker build cache and unused images (about 7.5 GB)
+### 1.2 Docker build cache (about 4.1 GB)
 
-Build cache (4.1 GB) and images no container uses (3.4 GB). They are pulled or rebuilt when a project
-needs them. Your volumes are not touched.
+Layers kept to speed up `docker build`. The next build of each image is slower. Your images and volumes
+are not touched.
 
 Check:
 
@@ -73,7 +73,6 @@ Clean:
 
 ```sh
 docker builder prune -f
-docker image prune -a -f
 ```
 
 `Docker.raw` usually shrinks on its own afterwards; if not, restart Docker Desktop.
@@ -193,6 +192,33 @@ docker volume rm shop_mysql-data
 docker volume rm blog_pg-data
 ```
 
+### 2.5 Docker images no container uses (about 3.4 GB)
+
+**Question:** Did you make any of these yourself, with `docker commit` or a local build whose Dockerfile
+is gone? Those can't be pulled again. The others are pulled again when a project needs them.
+
+| Size | Image | Created |
+| ---: | --- | --- |
+| 1.6 GB | `shop-api:dev` | 5 months ago |
+| 1.1 GB | `postgres:14` | 8 months ago |
+| 0.7 GB | `node:18-alpine` | 1 year ago |
+
+Check:
+
+```sh
+docker images
+```
+
+Clean (only the ones you answered "no" for):
+
+```sh
+docker rmi shop-api:dev
+docker rmi postgres:14
+docker rmi node:18-alpine
+```
+
+`Docker.raw` usually shrinks on its own afterwards; if not, restart Docker Desktop.
+
 ## 3. Leave alone
 
 | Location | Size | Why |
@@ -208,7 +234,7 @@ docker volume rm blog_pg-data
 df -h /System/Volumes/Data
 ```
 
-Group 1 takes you from about 7 GB to about 38 GB free; group 2 adds up to 22 GB.
+Group 1 takes you from about 7 GB to about 35 GB free; group 2 adds up to 25 GB.
 Finder may show more free space than `df` because it counts purgeable space.
 
 ## How this was scanned
