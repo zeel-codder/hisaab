@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" role="img" aria-labelledby="t d">
+<title id="t">hisaab demo</title>
+<desc id="d">An agent asks where to save the report, runs a read-only scan of the Mac, then reports 7.1 GB free, about 31 GB safe to clean and up to 22 GB to check first. Nothing is deleted.</desc>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:15px}
+.fg{fill:#e6edf3}.dim{fill:#8b949e}.sm{font-size:14px}.b{fill:#58a6ff}.g{fill:#3fb950}.o{fill:#d29922}
+.bar{transform-box:fill-box;transform-origin:left center}
+.title{fill:#8b949e;font-size:13px}
+.blink{animation:blink 1s steps(1) infinite}@keyframes blink{50%{opacity:0}}
+@keyframes k1{0%,2.0%{opacity:0}4.67%,94%{opacity:1}97%,100%{opacity:0}}.k1{animation:k1 15.0s linear infinite}
+@keyframes k2{0%,9.33%{opacity:0}12.0%,94%{opacity:1}97%,100%{opacity:0}}.k2{animation:k2 15.0s linear infinite}
+@keyframes k3{0%,17.33%{opacity:0}20.0%,94%{opacity:1}97%,100%{opacity:0}}.k3{animation:k3 15.0s linear infinite}
+@keyframes k4{0%,22.67%{opacity:0}25.33%,94%{opacity:1}97%,100%{opacity:0}}.k4{animation:k4 15.0s linear infinite}
+@keyframes k5{0%,22.67%{opacity:0}25.33%,94%{opacity:1}97%,100%{opacity:0}}.k5{animation:k5 15.0s linear infinite}
+@keyframes k6{0%,23.33%{opacity:1;transform:scaleX(0)}50.0%,94%{opacity:1;transform:scaleX(1)}97%,100%{opacity:0;transform:scaleX(1)}}.k6{animation:k6 15.0s linear infinite}
+@keyframes k7{0%,50.0%{opacity:0}52.67%,94%{opacity:1}97%,100%{opacity:0}}.k7{animation:k7 15.0s linear infinite}
+@keyframes k8{0%,26.67%{opacity:0}29.33%,94%{opacity:1}97%,100%{opacity:0}}.k8{animation:k8 15.0s linear infinite}
+@keyframes k9{0%,30.67%{opacity:0}33.33%,94%{opacity:1}97%,100%{opacity:0}}.k9{animation:k9 15.0s linear infinite}
+@keyframes k10{0%,34.67%{opacity:0}37.33%,94%{opacity:1}97%,100%{opacity:0}}.k10{animation:k10 15.0s linear infinite}
+@keyframes k11{0%,38.67%{opacity:0}41.33%,94%{opacity:1}97%,100%{opacity:0}}.k11{animation:k11 15.0s linear infinite}
+@keyframes k12{0%,42.67%{opacity:0}45.33%,94%{opacity:1}97%,100%{opacity:0}}.k12{animation:k12 15.0s linear infinite}
+@keyframes k13{0%,46.67%{opacity:0}49.33%,94%{opacity:1}97%,100%{opacity:0}}.k13{animation:k13 15.0s linear infinite}
+@keyframes k14{0%,53.33%{opacity:0}56.0%,94%{opacity:1}97%,100%{opacity:0}}.k14{animation:k14 15.0s linear infinite}
+@keyframes k15{0%,56.67%{opacity:0}59.33%,94%{opacity:1}97%,100%{opacity:0}}.k15{animation:k15 15.0s linear infinite}
+@keyframes k16{0%,60.0%{opacity:0}62.67%,94%{opacity:1}97%,100%{opacity:0}}.k16{animation:k16 15.0s linear infinite}
+@keyframes k17{0%,60.0%{opacity:1;transform:scaleX(0)}66.0%,94%{opacity:1;transform:scaleX(1)}97%,100%{opacity:0;transform:scaleX(1)}}.k17{animation:k17 15.0s linear infinite}
+@keyframes k18{0%,65.33%{opacity:0}68.0%,94%{opacity:1}97%,100%{opacity:0}}.k18{animation:k18 15.0s linear infinite}
+@keyframes k19{0%,63.33%{opacity:0}66.0%,94%{opacity:1}97%,100%{opacity:0}}.k19{animation:k19 15.0s linear infinite}
+@keyframes k20{0%,63.33%{opacity:1;transform:scaleX(0)}68.67%,94%{opacity:1;transform:scaleX(1)}97%,100%{opacity:0;transform:scaleX(1)}}.k20{animation:k20 15.0s linear infinite}
+@keyframes k21{0%,68.0%{opacity:0}70.67%,94%{opacity:1}97%,100%{opacity:0}}.k21{animation:k21 15.0s linear infinite}
+@keyframes k22{0%,72.0%{opacity:0}74.67%,94%{opacity:1}97%,100%{opacity:0}}.k22{animation:k22 15.0s linear infinite}
+@keyframes k23{0%,77.33%{opacity:0}80.0%,94%{opacity:1}97%,100%{opacity:0}}.k23{animation:k23 15.0s linear infinite}
+@keyframes k24{0%,79.33%{opacity:0}82.0%,94%{opacity:1}97%,100%{opacity:0}}.k24{animation:k24 15.0s linear infinite}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<rect width="820" height="430" rx="12" fill="#0d1117"/>
+<rect width="820" height="38" rx="12" fill="#161b22"/>
+<rect y="26" width="820" height="12" fill="#161b22"/>
+<circle cx="22" cy="19" r="6" fill="#ff5f57"/><circle cx="42" cy="19" r="6" fill="#febc2e"/><circle cx="62" cy="19" r="6" fill="#28c840"/>
+<text x="410.0" y="24" text-anchor="middle" class="title">hisaab: read-only Mac disk report</text>
+<text x="32" y="82" class="fg k1"><tspan class="b">❯</tspan> my mac is almost full, what can I clean?</text>
+<text x="32" y="109" class="dim k2"><tspan class="o">●</tspan> Where should I save the report? Default: the skill's reports/ folder.</text>
+<text x="32" y="136" class="fg k3"><tspan class="b">❯</tspan> default is fine</text>
+<text x="32" y="171" class="fg k4"><tspan class="o">●</tspan> Read-only scan</text>
+<rect x="220" y="159" width="440" height="12" rx="3" fill="#21262d" class="k5"/>
+<rect x="220" y="159" width="440" height="12" rx="3" fill="#58a6ff" class="bar k6"/>
+<text x="676" y="171" class="g k7">done</text>
+<text x="54" y="198" class="dim sm k8"><tspan class="g">✓</tspan> disk</text>
+<text x="129.60000000000002" y="198" class="dim sm k9"><tspan class="g">✓</tspan> home</text>
+<text x="205.20000000000005" y="198" class="dim sm k10"><tspan class="g">✓</tspan> ~/Library</text>
+<text x="322.80000000000007" y="198" class="dim sm k11"><tspan class="g">✓</tspan> Docker</text>
+<text x="415.20000000000005" y="198" class="dim sm k12"><tspan class="g">✓</tspan> Homebrew</text>
+<text x="524.4000000000001" y="198" class="dim sm k13"><tspan class="g">✓</tspan> Mole dry run</text>
+<text x="32" y="235" class="fg k14"><tspan class="g">●</tspan> Report saved: <tspan class="b">reports/hisaab-2026-10-20.md</tspan></text>
+<text x="54" y="262" class="dim k15"><tspan class="fg">7.1 GB free</tspan> of 245 GB</text>
+<text x="54" y="293" class="fg k16">Safe to clean</text>
+<rect x="200" y="280" width="418.5" height="16" rx="3" fill="#3fb950" class="bar k17"/>
+<text x="630.5" y="293" class="g k18">about 31 GB</text>
+<text x="54" y="320" class="fg k19">Check first</text>
+<rect x="200" y="307" width="297.0" height="16" rx="3" fill="#d29922" class="bar k20"/>
+<text x="509.0" y="320" class="o k21">up to 22 GB</text>
+<text x="54" y="351" class="dim sm k22">Biggest: Xcode DerivedData 18 GB · iOS simulators 11 GB · Docker 7.5 GB</text>
+<text x="32" y="384" class="fg k23"><tspan class="g">✓</tspan> Nothing was deleted. You review and run the commands.</text>
+<g class="k24"><rect x="32" y="398" width="9" height="17" fill="#e6edf3" class="blink"/></g>
+</svg>

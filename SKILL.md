@@ -84,7 +84,8 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
    (`-HHMM`) instead of overwriting it.
    Then check the commands: `python3 <skill-dir>/scripts/check_commands.py <report>`. It only parses
    each block with zsh and bash (runs nothing) and flags `#` comments. Fix what it reports and rerun it
-   until it says `0 problem(s)`.
+   until it says `0 problem(s)`. If `xcode-select -p` fails, `/usr/bin/python3` is only a stub that opens
+   an install dialog: don't run it; check each block yourself with `zsh -f -n` and `bash -n` instead.
 
 7. **Reply in chat** with: free space now, the potential gain from "Safe" and from "Check first", the top
    three items, and the report's path. Remind them nothing was deleted and that they run the commands.
@@ -135,5 +136,9 @@ Intel or Apple Silicon, with or without Oh My Zsh.
   report is still complete without it.
 - **Docker installed but not running**: report the disk image size from the scan and tell them to start
   Docker and rerun for image and volume detail. Never start or stop Docker yourself.
+- **No Xcode.app** (the scan says so): don't give `xcrun simctl` commands; the Command Line Tools alone
+  don't include `simctl`.
+- **Mole skipped as too old** (its help doesn't list the dry runs): suggest `brew upgrade mole`; never run
+  an old Mole's `clean` or `purge`.
 - **Not macOS**: stop and say the skill only supports macOS.
 - **Scanner timed out on a section**: say which, and suggest `--fast` or a rerun.

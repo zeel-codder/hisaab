@@ -3,7 +3,7 @@
 #
 # This script never deletes, moves or changes your files. It only runs: df, diskutil info, du, find
 # (without -delete/-exec), ls, tmutil listlocalsnapshots, docker (df/images/ps/info), brew (list/info and
-# the -n / --dry-run modes) and Mole's preview modes (mo clean --dry-run, mo purge --dry-run).
+# the -n / --dry-run modes) and Mole's help and preview modes (mo --help, mo clean --dry-run, mo purge --dry-run).
 # The only file it writes is Mole's own preview list (~/.config/mole/clean-list.txt), created by Mole.
 #
 # Usage: bash scan.sh [--no-mole] [--fast] > scan.md
@@ -40,16 +40,23 @@ log() { printf '» %s\n' "$*" >&2; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # Run a command with a time limit (macOS has no `timeout`). Exit 142 means it timed out.
+# The system perl first: a perl earlier in PATH may be broken or missing modules.
+PERL=/usr/bin/perl
+[ -x "$PERL" ] || PERL=$(command -v perl 2>/dev/null)
 with_timeout() {
   local secs=$1; shift
-  perl -e 'alarm shift; exec @ARGV or exit 127' "$secs" "$@"
+  if [ -n "$PERL" ]; then
+    "$PERL" -e 'alarm shift; exec @ARGV or exit 127' "$secs" "$@"
+  else
+    "$@"
+  fi
 }
 
 strip_ansi() { sed -e $'s/\x1b\\[[0-9;?]*[a-zA-Z]//g' -e $'s/\r//g'; }
 
-# KB -> "4.5 GB"
+# KB -> "4.5 GB" (C locale, or a German or French Mac prints "4,5 GB")
 human() {
-  awk -v k="${1:-0}" 'BEGIN { split("KB MB GB TB", u, " "); i = 1
+  LC_ALL=C awk -v k="${1:-0}" 'BEGIN { split("KB MB GB TB", u, " "); i = 1
     while (k >= 1024 && i < 4) { k /= 1024; i++ }
     printf((k < 10 && i > 1) ? "%.1f %s" : "%.0f %s", k, u[i]) }'
 }
@@ -89,7 +96,7 @@ echo "## Disk"
 echo
 DATA_VOL=/System/Volumes/Data
 [ -d "$DATA_VOL" ] || DATA_VOL=/
-df -k "$DATA_VOL" | awk 'NR == 2 {
+df -k "$DATA_VOL" | LC_ALL=C awk 'NR == 2 {
   printf "- Data volume: %.0f GB total, %.0f GB used, %.1f GB free (%s used)\n", $2/1048576, $3/1048576, $4/1048576, $5 }'
 diskutil info / 2>/dev/null | awk -F: '/Container Total Space|Container Free Space/ {
   sub(/^ +/, "", $2); sub(/ \(.*/, "", $2); printf "- %s: %s\n", $1, $2 }' | sed 's/^-  */- /'
@@ -99,12 +106,22 @@ echo
 log "tools"
 echo "## Tools found"
 echo
+# Until the Command Line Tools are installed, /usr/bin/xcrun, pip3 and python3 are stubs that only
+# open an install dialog, so they don't count as installed.
+DEV_TOOLS=0
+xcode-select -p >/dev/null 2>&1 && DEV_TOOLS=1
+real_tool() {
+  local p
+  p=$(command -v "$1" 2>/dev/null) || return 1
+  case "$p" in /usr/bin/*) [ "$DEV_TOOLS" = 1 ] ;; esac
+}
 tools=""
 for t in mo brew docker orb colima xcrun npm yarn pnpm pip3 uv poetry conda gradle pod go cargo pyenv rbenv; do
-  have "$t" && tools="$tools \`$t\`"
+  real_tool "$t" && tools="$tools \`$t\`"
 done
 [ -s "$HOME/.nvm/nvm.sh" ] && tools="$tools \`nvm\`"
 echo "Installed:${tools:- none of the known tools}"
+[ -d /Applications/Xcode.app ] || { echo; echo "No Xcode.app, so no \`xcrun simctl\` (simulator commands)."; }
 if have mo; then
   echo
   echo "Mole: $(mo --version 2>/dev/null | strip_ansi | grep -i 'version' | head -n 1)"
@@ -296,7 +313,7 @@ if have brew; then
   echo "### brew autoremove --dry-run (formulae only installed as dependencies)"
   echo
   with_timeout 120 brew autoremove --dry-run 2>&1 | tail -n 30 | fence
-  if have python3; then
+  if real_tool python3; then
     echo "### Casks whose app is missing"
     echo
     with_timeout 120 brew info --cask --installed --json=v2 2>/dev/null | python3 -I -c '
@@ -333,7 +350,14 @@ else
   echo
 fi
 
-if [ "$USE_MOLE" = 1 ] && have mo; then
+# Only a Mole whose help lists the dry runs: an old version might not know --dry-run and clean for real.
+mole_previews() {
+  local help
+  help=$(with_timeout 20 mo --help </dev/null 2>&1 | strip_ansi)
+  case "$help" in *"clean --dry-run"*) ;; *) return 1 ;; esac
+  case "$help" in *"purge --dry-run"*) ;; *) return 1 ;; esac
+}
+if [ "$USE_MOLE" = 1 ] && have mo && mole_previews; then
   log "mole clean --dry-run (can take a few minutes)"
   echo "## Mole: mo clean --dry-run"
   echo
@@ -345,8 +369,10 @@ if [ "$USE_MOLE" = 1 ] && have mo; then
 else
   echo "## Mole"
   echo
-  if have mo; then
+  if have mo && [ "$USE_MOLE" = 0 ]; then
     echo "_Skipped (--no-mole)._"
+  elif have mo; then
+    echo "_Skipped: this Mole's \`mo --help\` doesn't list \`clean --dry-run\` and \`purge --dry-run\`. Update it with \`brew upgrade mole\` and rerun._"
   else
     echo "_Mole is not installed. \`brew install mole\` adds app-cache and leftover-file checks to this scan._"
   fi

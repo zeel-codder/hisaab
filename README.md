@@ -8,6 +8,10 @@ filling your Mac's disk and writes **one Markdown report** with copy-paste comma
 **It never deletes anything.** The skill runs only read-only commands and dry runs; every cleanup command
 goes into the report, and you decide which ones to run.
 
+<p align="center">
+  <img src="docs/demo.svg" width="820" alt="An agent asks where to save the report, runs a read-only scan, then reports 7.1 GB free, about 31 GB safe to clean and up to 22 GB to check first. Nothing is deleted.">
+</p>
+
 ```text
 You:     my mac is almost full, what can I clean?
 Agent:   Where should I save the report? Default: the skill's reports/ folder.
@@ -51,7 +55,7 @@ See [examples/sample-report.md](examples/sample-report.md).
 
 - The scanner (`scripts/scan.sh`) runs only `df`, `diskutil info`, `du`, `find` (no `-delete`/`-exec`), `ls`,
   `stat`, `tmutil listlocalsnapshots`, read-only `docker` and `brew` commands, `brew cleanup -n`,
-  `brew autoremove --dry-run`, `mo clean --dry-run` and `mo purge --dry-run`. Read it: it is one short file.
+  `brew autoremove --dry-run`, `mo --help`, `mo clean --dry-run` and `mo purge --dry-run`. Read it: it is one short file.
 - The skill tells the agent never to run `rm`, `prune`, `uninstall`, `mo clean` (without `--dry-run`),
   `sudo` or anything else that changes files, even if you ask it to; it points you to the command instead.
 - The only file written during a scan is Mole's own preview list, `~/.config/mole/clean-list.txt`
@@ -63,9 +67,16 @@ See [examples/sample-report.md](examples/sample-report.md).
 
 ## Requirements
 
-- macOS (tested on macOS 27, Apple Silicon); works with the built-in `/bin/bash` and `perl`
+- macOS on Apple Silicon or Intel; works with the built-in `/bin/bash` (3.2) and `perl`, so a Mac with
+  nothing installed can run the scan. Tested on macOS 27 (Apple Silicon), including a run with only the
+  system tools on `PATH` and a German locale.
 - Optional, used when present: [Mole](https://github.com/tw93/mole) (`brew install mole`), Homebrew,
-  Docker, Xcode (`xcrun`), `python3`
+  Docker, Xcode (`xcrun simctl` needs Xcode.app, not just the Command Line Tools), `python3`
+- Without the Command Line Tools, macOS's `python3`, `pip3` and `xcrun` are stubs that open an install
+  dialog; the scanner treats them as missing, and the agent checks the report's commands with `zsh -n`
+  and `bash -n` instead of `scripts/check_commands.py`.
+- Mole runs only if its `mo --help` lists `clean --dry-run` and `purge --dry-run`; an older Mole is
+  skipped rather than risk a real clean.
 
 ## Install
 
@@ -127,7 +138,8 @@ hisaab/
 ├── scripts/check_commands.py        # checks a report's commands parse in zsh and bash
 ├── references/cleanup-catalog.md    # what each location is, its group, check and clean commands
 ├── assets/report-template.md        # the report layout
-└── examples/sample-report.md        # an example report (made-up data)
+├── examples/sample-report.md        # an example report (made-up data)
+└── docs/demo.svg                    # the animation at the top of this README
 ```
 
 1. The agent runs `scripts/scan.sh` and reads its output.
