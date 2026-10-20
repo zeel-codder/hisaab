@@ -28,7 +28,7 @@ anything is touched. If the person asks you to run something from the report, sa
 report-only and point them to the command; in Claude Code they can run it themselves by typing
 `! <command>`.
 
-Allowed (read-only): `scripts/scan.sh`, `df`, `diskutil info|list`, `du`, `ls`, `stat`, `file`, `find`
+Allowed (read-only): `scripts/scan.sh`, `scripts/check_commands.py`, `df`, `diskutil info|list`, `du`, `ls`, `stat`, `file`, `find`
 without `-delete`/`-exec`, `tmutil listlocalsnapshots`, `docker system df|images|ps|volume ls|info`,
 `brew list|info|leaves|cleanup -n|autoremove --dry-run`, `mo clean --dry-run`, `mo purge --dry-run`,
 `mo analyze --json <path>`, `xcrun simctl list`, `<tool> --version`, reading small text files such as a
@@ -80,6 +80,9 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
    folder the person chose in step 1 (default `<skill-dir>/reports/`; create that folder if needed).
    Write nothing anywhere else. One report per run; if that file already exists, add the time
    (`-HHMM`) instead of overwriting it.
+   Then check the commands: `python3 <skill-dir>/scripts/check_commands.py <report>`. It only parses
+   each block with zsh and bash (runs nothing) and flags `#` comments. Fix what it reports and rerun it
+   until it says `0 problem(s)`.
 
 7. **Reply in chat** with: free space now, the potential gain from "Safe" and from "Check first", the top
    three items, and the report's path. Remind them nothing was deleted and that they run the commands.
@@ -96,7 +99,29 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
   generic placeholders, when the scan has the data.
 - Mark commands that need `sudo` and say why; say when an app should be quit first (Docker, Xcode,
   Android Studio, the app whose cache it is).
-- Put risky variants on their own line with a comment, e.g. `docker volume prune` deletes data.
+- Put risky or optional variants in their own block with a sentence above it, e.g. "`docker volume
+  prune` deletes data".
+
+### Paste-safe in anyone's terminal
+
+The report is for the person who ran the scan, so use their real versions, image names and folders. But
+every command has to work when pasted into a plain macOS terminal: stock zsh (the default shell), bash,
+Intel or Apple Silicon, with or without Oh My Zsh.
+
+- **No `#` comments inside command blocks.** Stock zsh does not treat `#` as a comment when you type or
+  paste, so `rm -rf ~/x   # old cache` would also delete files named `#`, `old` and `cache` in the current
+  folder, and a `# check` line fails with "command not found". Put every note in prose above the block.
+- Use two blocks per item, introduced by **Check:** and **Clean:** in prose (see the template).
+- Write home paths as `~/...` or `"$HOME/..."`, never `/Users/<name>/...`. Put paths with spaces in
+  double quotes: `rm -rf "$HOME/Library/Application Support/Postman"`. A `~` inside quotes does not
+  expand, so inside quotes use `$HOME`.
+- Homebrew lives in `/opt/homebrew` on Apple Silicon and `/usr/local` on Intel: write `"$(brew --prefix)"`
+  rather than either path.
+- Only give commands for tools the scan found installed. If a tool needs setting up in a fresh terminal,
+  include that line; `nvm` is a shell function, so start with `. "${NVM_DIR:-$HOME/.nvm}/nvm.sh"`.
+- No wildcards in cleanup commands (an unmatched glob is an error in zsh and a literal name in bash);
+  name each path. No shell-specific syntax (zsh globs like `(N)` or `**`, bash-only `[[ ]]` in one-liners).
+- One command per line, so the person can run them one at a time and stop.
 - Avoid double counting in totals: `~/Library/Containers/com.docker.docker` already contains Docker's
   images, volumes and build cache; Homebrew's Caskroom overlaps with installed apps; Mole's preview
   overlaps with caches you list separately.

@@ -2,6 +2,8 @@
 
 What common space users on a Mac are, which group they belong to, and the command to put in the report.
 These commands are for the **report only**: the person runs them, the agent never does.
+When copying them into a report, follow SKILL.md's "Paste-safe in anyone's terminal" rules (no `#`
+comments in command blocks, `$HOME` inside quotes, `"$(brew --prefix)"` instead of a Homebrew path).
 
 Groups: **Safe** (rebuilds itself), **Check first** (may hold work or data), **Leave alone**.
 
@@ -68,8 +70,10 @@ over. Check first, then:
 
 ```sh
 rm -rf ~/Library/Developer/CoreSimulator
-sudo rm -rf /Library/Developer/CoreSimulator   # system-wide runtimes; needs your password
+sudo rm -rf /Library/Developer/CoreSimulator
 ```
+
+The second line removes the system-wide runtimes and asks for your password.
 
 If the `sudo` line says "Resource busy", restart the Mac and run it again. Keep
 `/Library/Developer/CommandLineTools`: git, Homebrew and compilers need it.
@@ -99,7 +103,8 @@ Quit Android Studio and stop Gradle first (`gradle --stop` or `pkill -f GradleDa
 | Old Node versions (fnm / Volta) | Check first | `fnm list` / `volta list all` | `fnm uninstall <version>` / remove in Volta |
 | `node_modules` in old projects | Check first | the scan's table (last changed date) | `rm -rf "<project>/node_modules"`; `npm install` restores it |
 
-`nvm` is a shell function: if `nvm` is "not found", run `source ~/.nvm/nvm.sh` first.
+`nvm` is a shell function, not a program: in a fresh terminal run `. "${NVM_DIR:-$HOME/.nvm}/nvm.sh"`
+first, or `nvm` is "command not found".
 
 ## Python
 

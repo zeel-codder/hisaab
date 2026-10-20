@@ -5,7 +5,7 @@
 
 > **Nothing was deleted.** This report only lists commands. Read each one before running it:
 > `rm -rf` skips the Trash and cannot be undone. Sizes are estimates.
-> In Claude Code you can run a command yourself with `! <command>`.
+> Commands work in zsh and bash; paste one line at a time. In Claude Code you can run one with `! <command>`.
 
 ## Summary
 
@@ -34,10 +34,15 @@ These rebuild themselves; the cost is a re-download or a slower next build.
 
 <What it is, and what happens after cleaning. Quit <app> first, if needed.>
 
+Check:
+
 ```sh
-# check
 <check command>
-# clean
+```
+
+Clean:
+
+```sh
 <cleanup command>
 ```
 
@@ -51,10 +56,15 @@ These may hold work or data. Answer the question first, then run the commands yo
 
 <What it is and what you lose.>
 
+Check:
+
 ```sh
-# check
 <check command>
-# clean
+```
+
+Clean:
+
+```sh
 <cleanup command>
 ```
 

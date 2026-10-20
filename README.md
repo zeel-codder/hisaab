@@ -40,6 +40,9 @@ The report sorts everything into three groups:
 | **Leave alone** | managed by macOS or needed by other tools, with the reason |
 
 Each item has a size, what it is, what you lose, a **check** command and a **clean** command.
+Commands are written to paste safely into any macOS terminal (stock zsh or bash, Intel or Apple
+Silicon): no usernames, no hard-coded Homebrew path, and no `#` comments, which stock zsh would pass to
+the command as arguments.
 See [examples/sample-report.md](examples/sample-report.md).
 
 ## Safety
@@ -104,10 +107,11 @@ up front ("save the report in ~/Documents") and the agent won't ask.
 The scanner works on its own and prints the raw findings as Markdown:
 
 ```sh
-mkdir -p reports && bash scripts/scan.sh > reports/mac-disk-scan.md
-bash scripts/scan.sh --fast      # skip the slow whole-home searches
-bash scripts/scan.sh --no-mole   # skip Mole even if installed
+mkdir -p reports
+bash scripts/scan.sh > reports/mac-disk-scan.md
 ```
+
+Add `--fast` to skip the slow whole-home searches, or `--no-mole` to skip Mole even if it is installed.
 
 The agent's value on top is identifying unknown folders, picking the right command for each item from
 [references/cleanup-catalog.md](references/cleanup-catalog.md) and writing it up.
@@ -118,6 +122,7 @@ The agent's value on top is identifying unknown folders, picking the right comma
 mac-disk-report/
 ├── SKILL.md                         # instructions the agent follows (workflow, report-only rule)
 ├── scripts/scan.sh                  # read-only scanner, prints Markdown
+├── scripts/check_commands.py        # checks a report's commands parse in zsh and bash
 ├── references/cleanup-catalog.md    # what each location is, its group, check and clean commands
 ├── assets/report-template.md        # the report layout
 └── examples/sample-report.md        # an example report (made-up data)
@@ -126,7 +131,8 @@ mac-disk-report/
 1. The agent runs `scripts/scan.sh` and reads its output.
 2. It probes anything large the catalog doesn't explain (read-only `du`/`ls`).
 3. It classifies each item with the catalog and fills in the template.
-4. It saves the report and gives you a short summary in chat.
+4. It saves the report, checks every command with `scripts/check_commands.py` (parse only, nothing
+   runs), and gives you a short summary in chat.
 
 ## Contributing
 
@@ -139,9 +145,13 @@ Ideas and fixes are welcome, especially new locations and better commands.
 
   ```sh
   bash -n scripts/scan.sh
-  grep -nE '\brm |\bmv |-delete|-exec |[a-z] prune|sudo' scripts/scan.sh   # should only match comments
+  grep -nE '\brm |\bmv |-delete|-exec |[a-z] prune|sudo' scripts/scan.sh
   bash scripts/scan.sh --fast > /tmp/scan.md && head -40 /tmp/scan.md
   ```
+
+  The `grep` should only match the comment at the top of the script.
+- **Changed a command in the catalog or example?** Run
+  `python3 scripts/check_commands.py references/cleanup-catalog.md examples/sample-report.md`.
 - Prefer each tool's own cleanup command over `rm -rf`, and never wildcard a whole `~/Library` folder.
 - Test on a real Mac and say which macOS version in the pull request.
 
