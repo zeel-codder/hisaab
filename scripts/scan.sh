@@ -34,7 +34,7 @@ export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_ENV_H
 
 # Cloud folders are skipped: their sizes are misleading and walking them is slow.
 DU_SKIP=(-I CloudStorage -I "Mobile Documents")
-TOP=${MAC_DISK_REPORT_TOP:-20}
+TOP=${HISAAB_TOP:-20}
 
 log() { printf '» %s\n' "$*" >&2; }
 have() { command -v "$1" >/dev/null 2>&1; }

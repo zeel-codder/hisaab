@@ -1,5 +1,5 @@
 ---
-name: mac-disk-report
+name: hisaab
 description: >-
   Scan a Mac's disk usage end to end (uses Mole `mo` if installed, plus du, df, Docker, Homebrew and
   dev-tool caches) and write ONE Markdown report that explains what is using space and gives copy-paste
@@ -11,7 +11,9 @@ description: >-
 compatibility: macOS only. Needs /bin/bash and perl (both ship with macOS). Optional, used when present - mo (Mole), brew, docker, xcrun, python3.
 ---
 
-# Mac disk report
+# hisaab: Mac disk report
+
+*Hisaab* (Hindi, "the accounts") keeps the books on a Mac's disk; it never spends anything.
 
 Produce one Markdown report that tells the person where their disk space went and gives them the exact
 commands to get it back, ordered by how safe they are. The person runs the commands themselves.
@@ -54,14 +56,14 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
 2. **Run the scanner** (from this skill's folder; use a long timeout, around 10 minutes):
 
    ```sh
-   bash <skill-dir>/scripts/scan.sh > "${TMPDIR:-/tmp}/mac-disk-scan.md"
+   bash <skill-dir>/scripts/scan.sh > "${TMPDIR:-/tmp}/hisaab-scan.md"
    ```
 
    Options: `--fast` skips the two whole-home searches (files over 1 GB, `node_modules`/`.venv`);
    `--no-mole` skips Mole. The script detects Mole, Homebrew and Docker on its own; without Mole it still
    covers everything except Mole's app-cache and leftover-file checks.
 
-3. **Read the scan** (`${TMPDIR:-/tmp}/mac-disk-scan.md`). Note the free space and the biggest items.
+3. **Read the scan** (`${TMPDIR:-/tmp}/hisaab-scan.md`). Note the free space and the biggest items.
 
 4. **Explain every big item.** For anything over roughly 1 GB that the catalog doesn't cover, find out
    what it is with read-only probes (`du -sh <dir>/*`, `ls`, a README, the owning app). A folder you
@@ -76,7 +78,7 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
    - **Leave alone**: managed by macOS or needed by other tools (swap, Command Line Tools, Photos, iCloud,
      in-use Docker volumes). Say why so nobody deletes them by hand.
 
-6. **Write the report** using `assets/report-template.md`, as `mac-disk-report-YYYY-MM-DD.md` in the
+6. **Write the report** using `assets/report-template.md`, as `hisaab-YYYY-MM-DD.md` in the
    folder the person chose in step 1 (default `<skill-dir>/reports/`; create that folder if needed).
    Write nothing anywhere else. One report per run; if that file already exists, add the time
    (`-HHMM`) instead of overwriting it.
