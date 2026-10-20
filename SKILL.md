@@ -1,0 +1,106 @@
+---
+name: mac-disk-report
+description: >-
+  Scan a Mac's disk usage end to end (uses Mole `mo` if installed, plus du, df, Docker, Homebrew and
+  dev-tool caches) and write ONE Markdown report that explains what is using space and gives copy-paste
+  cleanup commands grouped by risk. Report-only: it never deletes anything or runs a cleanup command.
+  Use this whenever someone says their Mac is full or low on storage, "System Data" is huge, wants to
+  free up disk space, asks what is taking space, wants to clean caches, Docker, Xcode, simulators,
+  Gradle, node_modules or old Node/Python versions, or mentions Mole / `mo clean`, even if they don't
+  ask for a "report".
+compatibility: macOS only. Needs /bin/bash and perl (both ship with macOS). Optional, used when present - mo (Mole), brew, docker, xcrun, python3.
+---
+
+# Mac disk report
+
+Produce one Markdown report that tells the person where their disk space went and gives them the exact
+commands to get it back, ordered by how safe they are. The person runs the commands themselves.
+
+## The one rule: report only
+
+Do not run any command that deletes, moves, prunes, uninstalls or "cleans" anything. Not during the scan,
+not to "test" a command, not to make the numbers nicer, not as a final step, and not if a tool offers to
+do it for you. Every cleanup command goes into the report for the person to run.
+
+Why: deletes on a Mac are permanent (`rm -rf` skips the Trash), the scan can't know which folders hold
+someone's only copy of work, and people use this skill precisely because they want to review before
+anything is touched. If the person asks you to run something from the report, say this skill is
+report-only and point them to the command; in Claude Code they can run it themselves by typing
+`! <command>`.
+
+Allowed (read-only): `scripts/scan.sh`, `df`, `diskutil info|list`, `du`, `ls`, `stat`, `file`, `find`
+without `-delete`/`-exec`, `tmutil listlocalsnapshots`, `docker system df|images|ps|volume ls|info`,
+`brew list|info|leaves|cleanup -n|autoremove --dry-run`, `mo clean --dry-run`, `mo purge --dry-run`,
+`mo analyze --json <path>`, `xcrun simctl list`, `<tool> --version`, reading small text files such as a
+README to identify a folder.
+
+Never run: `rm`, `mv`, `trash`, `srm`, any `prune`/`clean`/`purge`/`uninstall`/`delete`/`autoremove`
+without its dry-run flag, `mo clean` / `mo purge` / `mo uninstall` / `mo optimize` without `--dry-run`,
+`mo installer` (its dry run opens an interactive picker), `mo analyze` without `--json` (interactive),
+`tmutil deletelocalsnapshots`, `sudo` anything, or `osascript` that empties the Trash.
+
+Privacy: the report lists paths and sizes only. Don't open or quote file contents beyond what you need to
+name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
+
+## Workflow
+
+1. **Tell the person what will happen**: a read-only scan that takes about 3-10 minutes; macOS may ask
+   whether the terminal can access some folders (they can say no; those folders will show as unreadable).
+
+2. **Run the scanner** (from this skill's folder; use a long timeout, around 10 minutes):
+
+   ```sh
+   bash <skill-dir>/scripts/scan.sh > "${TMPDIR:-/tmp}/mac-disk-scan.md"
+   ```
+
+   Options: `--fast` skips the two whole-home searches (files over 1 GB, `node_modules`/`.venv`);
+   `--no-mole` skips Mole. The script detects Mole, Homebrew and Docker on its own; without Mole it still
+   covers everything except Mole's app-cache and leftover-file checks.
+
+3. **Read the scan** (`${TMPDIR:-/tmp}/mac-disk-scan.md`). Note the free space and the biggest items.
+
+4. **Explain every big item.** For anything over roughly 1 GB that the catalog doesn't cover, find out
+   what it is with read-only probes (`du -sh <dir>/*`, `ls`, a README, the owning app). A folder you
+   can't identify goes under "Check first", never "Safe".
+
+5. **Classify** each item with `references/cleanup-catalog.md`, which has the command, what it is and what
+   the person loses for common locations. Three groups:
+   - **Safe**: caches and build output that rebuild themselves; the cost is a slower next build or a
+     re-download.
+   - **Check first**: could hold work or data (VMs, simulators, emulators, old runtimes, Docker volumes,
+     project folders, Downloads, backups, apps' data). Phrase each as a question the person can answer.
+   - **Leave alone**: managed by macOS or needed by other tools (swap, Command Line Tools, Photos, iCloud,
+     in-use Docker volumes). Say why so nobody deletes them by hand.
+
+6. **Write the report** using `assets/report-template.md`. Save it to
+   `~/Desktop/mac-disk-report-YYYY-MM-DD.md` unless the person named a place. One report per run.
+
+7. **Reply in chat** with: free space now, the potential gain from "Safe" and from "Check first", the top
+   three items, and the report's path. Remind them nothing was deleted and that they run the commands.
+
+## Writing the commands
+
+- Give each item a **check** command (`du -sh <path>`, `docker system df`, `nvm ls`...) before the cleanup
+  command, so the person sees the size and target first.
+- Prefer the tool's own cleanup over `rm -rf`: `brew cleanup`, `npm cache clean --force`, `uv cache clean`,
+  `docker builder prune`, `xcrun simctl delete unavailable`, `nvm uninstall <version>`. Use `rm -rf` only
+  for plain cache folders with no tool command, and always with the full quoted path, never a wildcard
+  at the top of a folder like `~/Library/*`.
+- Name the exact things to remove (versions, image names, folder paths) using what the scan found, not
+  generic placeholders, when the scan has the data.
+- Mark commands that need `sudo` and say why; say when an app should be quit first (Docker, Xcode,
+  Android Studio, the app whose cache it is).
+- Put risky variants on their own line with a comment, e.g. `docker volume prune` deletes data.
+- Avoid double counting in totals: `~/Library/Containers/com.docker.docker` already contains Docker's
+  images, volumes and build cache; Homebrew's Caskroom overlaps with installed apps; Mole's preview
+  overlaps with caches you list separately.
+- Sizes are estimates; round them ("about 4 GB").
+
+## When things are missing
+
+- **No Mole**: say so in the report and suggest `brew install mole` as optional for a deeper scan; the
+  report is still complete without it.
+- **Docker installed but not running**: report the disk image size from the scan and tell them to start
+  Docker and rerun for image and volume detail. Never start or stop Docker yourself.
+- **Not macOS**: stop and say the skill only supports macOS.
+- **Scanner timed out on a section**: say which, and suggest `--fast` or a rerun.
