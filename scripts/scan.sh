@@ -8,7 +8,7 @@
 #
 # Usage: bash scan.sh [--no-mole] [--fast] > scan.md
 #   --no-mole  skip Mole even if it is installed
-#   --fast     skip the slow whole-home searches (large files, node_modules/.venv)
+#   --fast     skip the slow whole-home searches (large files, node_modules/.venv/Rust target)
 #
 # Works with the stock macOS /bin/bash (3.2): no associative arrays, no mapfile.
 
@@ -40,13 +40,26 @@ log() { printf '» %s\n' "$*" >&2; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # Run a command with a time limit (macOS has no `timeout`). Exit 142 means it timed out.
+# The command runs in its own process group so a timeout also stops its children (brew and mo start
+# helpers that can keep the output pipe open). Ctrl-C is passed on to the group.
 # The system perl first: a perl earlier in PATH may be broken or missing modules.
 PERL=/usr/bin/perl
 [ -x "$PERL" ] || PERL=$(command -v perl 2>/dev/null)
 with_timeout() {
   local secs=$1; shift
   if [ -n "$PERL" ]; then
-    "$PERL" -e 'alarm shift; exec @ARGV or exit 127' "$secs" "$@"
+    "$PERL" -e '
+      my $secs = shift;
+      my $pid = fork;
+      defined $pid or exit 127;
+      if (!$pid) { setpgrp(0, 0); exec @ARGV or exit 127 }
+      setpgrp($pid, $pid);
+      for my $sig (qw(INT TERM HUP)) { $SIG{$sig} = sub { kill $sig, -$pid; exit 130 } }
+      $SIG{ALRM} = sub { kill "TERM", -$pid; sleep 2; kill "KILL", -$pid; exit 142 };
+      alarm $secs;
+      waitpid $pid, 0;
+      exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
+    ' "$secs" "$@"
   else
     "$@"
   fi
@@ -61,7 +74,8 @@ human() {
     printf((k < 10 && i > 1) ? "%.1f %s" : "%.0f %s", k, u[i]) }'
 }
 
-tilde() { local p=$1; printf '%s' "${p/#$HOME/~}"; }
+# Not ${p/#$HOME/~}: bash 4.3+ expands that ~ back into $HOME, and \~ prints a backslash in bash 3.2.
+tilde() { case $1 in "$HOME" | "$HOME"/*) printf '~%s' "${1#"$HOME"}" ;; *) printf '%s' "$1" ;; esac; }
 
 size_kb() { du -xsk "${DU_SKIP[@]}" "$1" 2>/dev/null | awk '{print $1}'; }
 
@@ -73,7 +87,7 @@ top_children() {
   echo "| ---: | --- |"
   du -xsk "${DU_SKIP[@]}" "$dir"/* "$dir"/.[!.]* 2>/dev/null | grep -vE '/(\.DS_Store|\.localized)$' |
     sort -rn | head -n "$n" |
-    while read -r kb path; do
+    while IFS=$'\t' read -r kb path; do
       printf '| %s | `%s` |\n' "$(human "$kb")" "$(tilde "$path")"
     done
   echo
@@ -116,7 +130,8 @@ real_tool() {
   case "$p" in /usr/bin/*) [ "$DEV_TOOLS" = 1 ] ;; esac
 }
 tools=""
-for t in mo brew docker orb colima xcrun npm yarn pnpm pip3 uv poetry conda gradle pod go cargo pyenv rbenv; do
+for t in mo brew docker orb colima xcrun npm yarn pnpm bun pip3 uv poetry conda hf huggingface-cli gradle pod go cargo \
+  dart flutter pyenv rbenv; do
   real_tool "$t" && tools="$tools \`$t\`"
 done
 [ -s "$HOME/.nvm/nvm.sh" ] && tools="$tools \`nvm\`"
@@ -199,6 +214,8 @@ done <<EOF | sort -rn | cut -f2-
 ~/Library/Caches/Yarn|Yarn cache
 ~/.yarn/berry/cache|Yarn Berry cache
 ~/Library/pnpm/store|pnpm store
+~/.bun/install/cache|Bun cache
+~/Library/Caches/node-gyp|node-gyp headers
 ~/Library/Caches/pip|pip cache
 ~/.cache/pip|pip cache
 ~/.cache/uv|uv cache
@@ -215,6 +232,7 @@ done <<EOF | sort -rn | cut -f2-
 ~/go/pkg/mod|Go module cache
 ~/Library/Caches/go-build|Go build cache
 ~/.cargo/registry|Cargo registry
+~/.pub-cache|Dart/Flutter pub cache
 ~/.rustup/toolchains|Rust toolchains
 ~/Library/Caches/CocoaPods|CocoaPods cache
 ~/.cocoapods|CocoaPods specs
@@ -224,6 +242,8 @@ done <<EOF | sort -rn | cut -f2-
 ~/.pyenv/versions|pyenv Python versions
 ~/.rbenv/versions|rbenv Ruby versions
 ~/Library/Caches/ms-playwright|Playwright browsers
+~/.cache/puppeteer|Puppeteer browsers
+~/Library/Caches/Cypress|Cypress app binaries
 ${BREW_CACHE:-~/Library/Caches/Homebrew}|Homebrew download cache (brew --cache)
 ~/Library/Containers/com.docker.docker|Docker Desktop disk image
 ~/.docker|Docker CLI data
@@ -240,6 +260,11 @@ ${BREW_CACHE:-~/Library/Caches/Homebrew}|Homebrew download cache (brew --cache)
 ~/Library/Application Support/Code/CachedExtensionVSIXs|VS Code extension downloads
 ~/Library/Application Support/Code/User/workspaceStorage|VS Code per-workspace data
 ~/Library/Application Support/Cursor/User/workspaceStorage|Cursor per-workspace data
+~/.vscode/extensions|VS Code extensions
+~/Library/Caches/JetBrains|JetBrains IDE caches
+~/Library/Application Support/Slack/Cache|Slack cache
+~/Library/Application Support/Slack/Service Worker/CacheStorage|Slack cache
+~/Library/Containers/com.tinyspeck.slackmacgap/Data/Library/Application Support/Slack/Cache|Slack (App Store) cache
 ~/Library/Application Support/Local|Local (WordPress) sites
 ~/Library/Logs|app logs
 ~/Downloads|Downloads
@@ -392,7 +417,7 @@ found=$(find "$HOME/Downloads" "$HOME/Desktop" "$HOME/Documents" -maxdepth 3 -ty
 if [ -n "$found" ]; then
   echo "| Size | Path |"
   echo "| ---: | --- |"
-  printf '%s\n' "$found" | while read -r f; do
+  printf '%s\n' "$found" | while IFS= read -r f; do
     printf '%s\t| %s | `%s` |\n' "$(size_kb "$f")" "$(human "$(size_kb "$f")")" "$(tilde "$f")"
   done | sort -rn | cut -f2-
 else
@@ -409,7 +434,7 @@ if [ "$FAST" = 0 ]; then
   if [ -n "$big" ]; then
     echo "| Size | Path |"
     echo "| ---: | --- |"
-    printf '%s\n' "$big" | while read -r f; do
+    printf '%s\n' "$big" | while IFS= read -r f; do
       printf '%s\t| %s | `%s` |\n' "$(size_kb "$f")" "$(human "$(size_kb "$f")")" "$(tilde "$f")"
     done | sort -rn | cut -f2- | head -n 30
   else
@@ -417,16 +442,18 @@ if [ "$FAST" = 0 ]; then
   fi
   echo
 
-  log "node_modules and .venv folders (up to 5 minutes)"
-  echo "## Project dependency folders (node_modules, .venv) over 50 MB"
+  log "node_modules, .venv and Rust target folders (up to 5 minutes)"
+  echo "## Project dependency and build folders (node_modules, .venv, Rust target) over 50 MB"
   echo
   deps=$(with_timeout 300 find -x "$HOME" -maxdepth 7 \
     \( -path "$HOME/Library" -o -path "$HOME/.Trash" -o -path "$HOME/.nvm" -o -path "$HOME/.npm" -o -path "$HOME/.cache" \) -prune \
-    -o -type d \( -name node_modules -o -name .venv \) -print -prune 2>/dev/null)
+    -o -type d \( -name node_modules -o -name .venv -o -name target \) -print -prune 2>/dev/null)
   if [ -n "$deps" ]; then
     echo "| Size | Path | Last changed |"
     echo "| ---: | --- | --- |"
-    printf '%s\n' "$deps" | while read -r d; do
+    printf '%s\n' "$deps" | while IFS= read -r d; do
+      # Only a Rust project's target/ (a Cargo.toml next to it): other tools use the name for real files.
+      [ "$(basename "$d")" != target ] || [ -f "$(dirname "$d")/Cargo.toml" ] || continue
       kb=$(size_kb "$d")
       [ "${kb:-0}" -ge 51200 ] || continue
       printf '%s\t| %s | `%s` | %s |\n' "$kb" "$(human "$kb")" "$(tilde "$d")" "$(stat -f '%Sm' -t '%Y-%m-%d' "$(dirname "$d")" 2>/dev/null)"

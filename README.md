@@ -26,15 +26,16 @@ Agent:   (runs a read-only scan for a few minutes)
 ## What it checks
 
 - Disk totals (`df`, `diskutil`) and the biggest folders in your home, `~/Library`, `/Applications`
-- Developer caches: Xcode, iOS simulators, Android/Gradle, npm/Yarn/pnpm, pip/uv/Poetry/conda, Go, Cargo,
-  Maven, CocoaPods, Playwright, Hugging Face, Ollama
+- Developer caches: Xcode, iOS simulators, Android/Gradle, npm/Yarn/pnpm/Bun, node-gyp, pip/uv/Poetry/conda,
+  Go, Cargo, Dart/Flutter, Maven, CocoaPods, Playwright/Puppeteer/Cypress browsers, Hugging Face, Ollama
+- App caches: VS Code and Cursor, JetBrains IDEs, Slack
 - Old runtime versions: nvm, pyenv, rbenv, rustup
 - Docker: images, build cache, unused volumes, stopped containers, the Docker Desktop disk image;
   other VM tools (OrbStack, Colima, Lima, UTM, Parallels)
 - Homebrew: old versions, unneeded dependencies, casks whose app was deleted
 - [Mole](https://github.com/tw93/mole) previews, if installed (`mo clean --dry-run`, `mo purge --dry-run`):
   app caches, logs, leftover files, orphan dotfolders
-- Files over 1 GB, old installers (`.dmg`, `.pkg`, `.iso`), forgotten `node_modules` and `.venv` folders,
+- Files over 1 GB, old installers (`.dmg`, `.pkg`, `.iso`), forgotten `node_modules`, `.venv` and Rust `target` folders,
   Time Machine local snapshots
 
 The report sorts everything into three groups:
@@ -59,7 +60,7 @@ See [examples/sample-report.md](examples/sample-report.md).
 - The skill tells the agent never to run `rm`, `prune`, `uninstall`, `mo clean` (without `--dry-run`),
   `sudo` or anything else that changes files, even if you ask it to; it points you to the command instead.
 - The only file written during a scan is Mole's own preview list, `~/.config/mole/clean-list.txt`
-  (only if Mole is installed), plus the report itself.
+  (only if Mole is installed), the raw scan in `$TMPDIR`, and the report itself.
 - Homebrew runs with `HOMEBREW_NO_AUTO_UPDATE=1`, so the scan does not update anything.
 - iCloud Drive and `~/Library/CloudStorage` are skipped so the scan never touches cloud files.
 - Paths and sizes stay on your Mac; nothing is uploaded by the scanner. (Your agent sees the scan, as with
@@ -166,6 +167,7 @@ Ideas and fixes are welcome, especially new locations and better commands.
   The `grep` should only match the comment at the top of the script.
 - **Changed a command in the catalog or example?** Run
   `python3 scripts/check_commands.py references/cleanup-catalog.md examples/sample-report.md`.
+  It parses every shell block and every inline command in a table's Check or Clean column.
 - Prefer each tool's own cleanup command over `rm -rf`, and never wildcard a whole `~/Library` folder.
 - Test on a real Mac and say which macOS version in the pull request.
 

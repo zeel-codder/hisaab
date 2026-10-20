@@ -32,7 +32,7 @@ hand: that erases every image, container and volume at once.
 | --- | --- | --- | --- | --- |
 | Build cache | Safe | `docker system df` | `docker builder prune -f` | slower next build |
 | Dangling images | Safe | `docker images -f dangling=true` | `docker image prune -f` | nothing |
-| Unused images | Safe | `docker images` | `docker image prune -a -f` | re-pull/rebuild later; only images no container uses |
+| Unused images | Check first | `docker images` | `docker image prune -a -f` | every image no container uses, including ones you can't get back: made with `docker commit`, built locally from a Dockerfile that is gone, or pulled tags since removed upstream. Otherwise re-pull/rebuild later |
 | Stopped containers | Check first | `docker ps -a -f status=exited` | `docker container prune -f` | their changes and logs |
 | Unused volumes | Check first | `docker volume ls -f dangling=true` | `docker volume rm <name>` | **the data in them** (databases) |
 | Docker Desktop disk limit | Check first | Settings > Resources > Disk usage limit | lower the limit in Settings | the app may need to reset the image |
@@ -101,6 +101,10 @@ Quit Android Studio and stop Gradle first (`gradle --stop` or `pkill -f GradleDa
 | Playwright browsers | Safe | `du -sh ~/Library/Caches/ms-playwright` | `rm -rf ~/Library/Caches/ms-playwright` (reinstall: `npx playwright install`) |
 | Old Node versions (nvm) | Check first | `nvm ls` | `nvm uninstall <version>`; keep the default (`nvm alias default`) |
 | Old Node versions (fnm / Volta) | Check first | `fnm list` / `volta list all` | `fnm uninstall <version>` / remove in Volta |
+| Bun cache | Safe | `du -sh ~/.bun/install/cache` | `bun pm cache rm` |
+| node-gyp headers | Safe | `du -sh ~/Library/Caches/node-gyp` | `rm -rf ~/Library/Caches/node-gyp` (re-downloaded on the next native build) |
+| Puppeteer browsers | Safe | `du -sh ~/.cache/puppeteer` | `rm -rf ~/.cache/puppeteer` (reinstall: `npx puppeteer browsers install chrome`) |
+| Cypress app binaries | Safe | `du -sh ~/Library/Caches/Cypress` | `rm -rf ~/Library/Caches/Cypress` (reinstall: `npx cypress install`) |
 | `node_modules` in old projects | Check first | the scan's table (last changed date) | `rm -rf "<project>/node_modules"`; `npm install` restores it |
 
 `nvm` is a shell function, not a program: in a fresh terminal run `. "${NVM_DIR:-$HOME/.nvm}/nvm.sh"`
@@ -116,7 +120,7 @@ first, or `nvm` is "command not found".
 | Poetry virtualenvs | Check first | `ls ~/Library/Caches/pypoetry/virtualenvs` | `rm -rf ~/Library/Caches/pypoetry/virtualenvs/<env>`; `poetry install` recreates |
 | pre-commit envs | Safe | `du -sh ~/.cache/pre-commit` | `pre-commit clean` |
 | conda package cache | Safe | `conda info` | `conda clean --all -y` |
-| Hugging Face cache | Check first | `du -sh ~/.cache/huggingface/*` | `huggingface-cli delete-cache` (interactive) |
+| Hugging Face cache | Check first | `hf cache ls` | `hf cache rm <repo id>` per model (asks to confirm); `hf cache prune` removes only unreferenced revisions and broken downloads. An older install has only `huggingface-cli scan-cache` / `huggingface-cli delete-cache` (interactive) |
 | Ollama models | Check first | `ollama list` | `ollama rm <model>` |
 | Old Python versions (pyenv) | Check first | `pyenv versions` | `pyenv uninstall <version>`; keep `pyenv global` |
 | Anaconda install not used | Check first | | `brew uninstall --cask anaconda` or remove `~/anaconda3` |
@@ -129,8 +133,10 @@ first, or `nvm` is "command not found".
 | Go build cache | Safe | `go env GOCACHE` | `go clean -cache` |
 | Go module cache | Safe | `du -sh ~/go/pkg/mod` | `go clean -modcache` |
 | Cargo registry cache | Safe | `du -sh ~/.cargo/registry` | `rm -rf ~/.cargo/registry/cache` |
+| Rust `target/` in old projects | Safe | the scan's dependency table | `cargo clean --manifest-path "<project>/Cargo.toml"`; the next build is slow |
 | Rust toolchains | Check first | `rustup toolchain list` | `rustup toolchain uninstall <name>` |
-| Maven repository | Safe | `du -sh ~/.m2/repository` | `rm -rf ~/.m2/repository` |
+| Dart/Flutter pub cache | Safe | `du -sh ~/.pub-cache` | `dart pub cache clean` (asks to confirm); `flutter pub get` restores packages |
+| Maven repository | Check first | `du -sh ~/.m2/repository` | `rm -rf ~/.m2/repository`; downloads come back, but artifacts you built with `mvn install` exist nowhere else |
 | CocoaPods cache | Safe | `du -sh ~/Library/Caches/CocoaPods` | `pod cache clean --all` |
 | Ruby versions (rbenv) | Check first | `rbenv versions` | `rbenv uninstall <version>` |
 
@@ -152,6 +158,9 @@ Quit the app before clearing its cache.
 | VS Code updater leftovers (`~/Library/Caches/com.microsoft.VSCode.ShipIt`) | Safe | `rm -rf ~/Library/Caches/com.microsoft.VSCode.ShipIt` |
 | VS Code extension downloads (`CachedExtensionVSIXs`) | Safe | `rm -rf ~/Library/Application\ Support/Code/CachedExtensionVSIXs` |
 | VS Code / Cursor `workspaceStorage` | Check first | per-workspace state (undo history, extension data) for old projects; delete old subfolders only |
+| VS Code extensions (`~/.vscode/extensions`) | Check first | `code --list-extensions --show-versions`; uninstall unused ones in the Extensions view. Folders of replaced versions go after a VS Code restart; don't delete extension folders by hand |
+| JetBrains caches (`~/Library/Caches/JetBrains`) | Safe | `ls ~/Library/Caches/JetBrains`, then `rm -rf ~/Library/Caches/JetBrains/<old IDE version>` for versions you no longer run; the current one re-indexes if removed |
+| Slack cache | Safe | quit Slack, then `rm -rf "$HOME/Library/Application Support/Slack/Cache" "$HOME/Library/Application Support/Slack/Service Worker/CacheStorage"` (App Store Slack: the same folders under `~/Library/Containers/com.tinyspeck.slackmacgap/Data/Library/Application Support/Slack`) |
 | One app's cache in `~/Library/Caches/<bundle id>` | Safe | `rm -rf ~/Library/Caches/<bundle id>` |
 | App you uninstalled, data left in `~/Library/Application Support/<App>` or `~/Library/Containers/<id>` | Check first | confirm the app is gone, then remove that folder |
 | App you want to uninstall | Check first | `mo uninstall` (removes the app and its leftovers) or drag to Trash |
