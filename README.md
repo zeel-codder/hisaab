@@ -8,8 +8,10 @@ goes into the report, and you decide which ones to run.
 
 ```text
 You:     my mac is almost full, what can I clean?
+Agent:   Where should I save the report? Default: the skill's reports/ folder.
+You:     default is fine
 Agent:   (runs a read-only scan for a few minutes)
-         Report saved to ~/Desktop/mac-disk-report-2026-10-20.md
+         Report saved to ~/.claude/skills/mac-disk-report/reports/mac-disk-report-2026-10-20.md
          4.5 GB free. Safe to clean: about 12 GB. Check first: up to 30 GB.
          Biggest: Docker build cache 3 GB, Gradle caches 4 GB, iOS simulators 7.6 GB.
          Nothing was deleted.
@@ -92,14 +94,17 @@ The agent tells you it is starting a read-only scan (3-10 minutes). macOS may as
 may access some folders; you can decline, and those folders are reported as unreadable. Give the terminal
 Full Disk Access (System Settings > Privacy & Security) for a complete scan.
 
-The report is saved to `~/Desktop/mac-disk-report-YYYY-MM-DD.md` unless you ask for another place.
+Before scanning, the agent asks where to save the report. The default is the skill's own `reports/`
+folder (for example `~/.claude/skills/mac-disk-report/reports/mac-disk-report-YYYY-MM-DD.md`), which is
+git-ignored so your reports are never pushed with the skill. Name any other folder instead, or say it
+up front ("save the report in ~/Documents") and the agent won't ask.
 
 ### Without an agent
 
 The scanner works on its own and prints the raw findings as Markdown:
 
 ```sh
-bash scripts/scan.sh > ~/Desktop/mac-disk-scan.md
+mkdir -p reports && bash scripts/scan.sh > reports/mac-disk-scan.md
 bash scripts/scan.sh --fast      # skip the slow whole-home searches
 bash scripts/scan.sh --no-mole   # skip Mole even if installed
 ```

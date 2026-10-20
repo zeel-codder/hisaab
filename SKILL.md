@@ -44,8 +44,12 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
 
 ## Workflow
 
-1. **Tell the person what will happen**: a read-only scan that takes about 3-10 minutes; macOS may ask
-   whether the terminal can access some folders (they can say no; those folders will show as unreadable).
+1. **Ask where to save the report, before scanning.** Don't pick a place yourself: a report dropped
+   into whatever folder you happen to be in (often someone's project repo) ends up committed or lost.
+   Offer the default, this skill's own `reports/` folder (git-ignored, so reports never get pushed with the
+   skill), and let them name any other folder. Skip the question only if they already said where.
+   Ask it together with what will happen: a read-only scan of about 3-10 minutes, during which macOS may
+   ask whether the terminal can access some folders (they can say no; those show as unreadable).
 
 2. **Run the scanner** (from this skill's folder; use a long timeout, around 10 minutes):
 
@@ -72,8 +76,10 @@ name a folder, and never read `.env`, keychains, SSH keys or browser profiles.
    - **Leave alone**: managed by macOS or needed by other tools (swap, Command Line Tools, Photos, iCloud,
      in-use Docker volumes). Say why so nobody deletes them by hand.
 
-6. **Write the report** using `assets/report-template.md`. Save it to
-   `~/Desktop/mac-disk-report-YYYY-MM-DD.md` unless the person named a place. One report per run.
+6. **Write the report** using `assets/report-template.md`, as `mac-disk-report-YYYY-MM-DD.md` in the
+   folder the person chose in step 1 (default `<skill-dir>/reports/`; create that folder if needed).
+   Write nothing anywhere else. One report per run; if that file already exists, add the time
+   (`-HHMM`) instead of overwriting it.
 
 7. **Reply in chat** with: free space now, the potential gain from "Safe" and from "Check first", the top
    three items, and the report's path. Remind them nothing was deleted and that they run the commands.
